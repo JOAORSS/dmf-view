@@ -1,0 +1,52 @@
+{
+  "name": "dfm-preview",
+  "displayName": "DFM Preview",
+  "description": "Preview Delphi .dfm form files as HTML/CSS in VSCode",
+  "version": "0.0.1",
+  "publisher": "dfm-view",
+  "engines": {
+    "vscode": "^1.80.0"
+  },
+  "categories": [
+    "Visualization"
+  ],
+  "activationEvents": [
+    "onLanguage:delphi"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "dfmPreview.open",
+        "title": "DFM: Preview"
+      }
+    ],
+    "menus": {
+      "editor/title": [
+        {
+          "command": "dfmPreview.open",
+          "when": "resourceExtname == .dfm"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "DFM Preview",
+      "properties": {
+        "dfmPreview.scannerPath": {
+          "type": "string",
+          "default": "dfm_scanner",
+          "description": "Path to the dfm_scanner binary. Default: expects it in PATH."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.80.0",
+    "@types/node": "^18.0.0",
+    "typescript": "^5.0.0"
+  }
+}
