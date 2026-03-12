@@ -19,6 +19,10 @@
       {
         "command": "dfmPreview.open",
         "title": "DFM: Preview"
+      },
+      {
+        "command": "dfmPreview.generateAliases",
+        "title": "DFM: Gerar Aliases"
       }
     ],
     "menus": {
