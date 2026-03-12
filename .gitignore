@@ -1,0 +1,13 @@
+# Rust
+/dfm_scanner/target/
+
+# Node.js
+node_modules/
+out/
+
+# VSCode extension
+*.vsix
+
+# OS
+.DS_Store
+Thumbs.db
