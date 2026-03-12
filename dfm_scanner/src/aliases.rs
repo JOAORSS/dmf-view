@@ -131,11 +131,11 @@ pub fn get_local_db_path(dfm_path: &Path) -> Option<PathBuf> {
     }
 }
 
-/// Loads all types from a SQLite database and returns a map of name→(parent, source_file).
+/// Loads all types from a SQLite database and returns a map of lowercase_name→(original_name, parent_lower, source_file).
 /// Query: SELECT name, parent_type, file_path FROM symbols WHERE kind=1 AND parent_type != ''
 pub fn load_type_parents(
     db_path: &Path,
-) -> Result<HashMap<String, (String, String)>, String> {
+) -> Result<HashMap<String, (String, String, String)>, String> {
     let conn =
         Connection::open(db_path).map_err(|e| format!("Failed to open db: {}", e))?;
 
@@ -158,7 +158,10 @@ pub fn load_type_parents(
     let mut map = HashMap::new();
     for row in rows {
         if let Ok((name, parent, file)) = row {
-            map.insert(name.to_lowercase(), (parent.to_lowercase(), file));
+            map.insert(
+                name.to_lowercase(),
+                (name, parent.to_lowercase(), file),
+            );
         }
     }
     Ok(map)
@@ -184,25 +187,25 @@ fn find_vcl_base_name(name_lower: &str) -> String {
 /// Returns None if no VCL base is reachable within 10 levels.
 pub fn resolve_to_vcl_base(
     type_name: &str,
-    parents: &HashMap<String, (String, String)>,
+    parents: &HashMap<String, (String, String, String)>,
 ) -> Option<AliasEntry> {
-    let original = type_name.to_string();
-    let mut current = type_name.to_lowercase();
+    let key = type_name.to_lowercase();
+
+    // Get the original casing and source file from the entry
+    let (original_name, _, source_file) = parents.get(&key)?;
+    let original = original_name.clone();
+    let source = source_file.clone();
+
+    let mut current = key;
     let mut depth: u32 = 0;
     let mut visited = std::collections::HashSet::new();
-
-    // Get the source file from the original type entry
-    let source_file = parents
-        .get(&current)
-        .map(|(_, f)| f.clone())
-        .unwrap_or_default();
 
     loop {
         if depth > 10 {
             return None;
         }
 
-        let (parent_lower, _) = parents.get(&current)?;
+        let (_, parent_lower, _) = parents.get(&current)?;
         depth += 1;
 
         if is_vcl_base(parent_lower) {
@@ -210,7 +213,7 @@ pub fn resolve_to_vcl_base(
                 custom_type: original,
                 vcl_base: find_vcl_base_name(parent_lower),
                 depth,
-                source_file,
+                source_file: source,
             });
         }
 
@@ -227,7 +230,7 @@ pub fn resolve_to_vcl_base(
 /// Loads types from publico.db and optionally local.db, then resolves
 /// each type to its VCL base.
 pub fn build_aliases(dfm_path: &Path) -> Vec<AliasEntry> {
-    let mut parents: HashMap<String, (String, String)> = HashMap::new();
+    let mut parents: HashMap<String, (String, String, String)> = HashMap::new();
 
     // Load from publico.db
     if let Some(db_path) = get_public_db_path() {
@@ -300,10 +303,10 @@ mod tests {
         let mut parents = HashMap::new();
         parents.insert(
             "tcfpainel".to_string(),
-            ("tpanel".to_string(), "cfpainel.pas".to_string()),
+            ("TCFPainel".to_string(), "tpanel".to_string(), "cfpainel.pas".to_string()),
         );
 
-        let entry = resolve_to_vcl_base("TCFPainel", &parents).unwrap();
+        let entry = resolve_to_vcl_base("tcfpainel", &parents).unwrap();
         assert_eq!(entry.custom_type, "TCFPainel");
         assert_eq!(entry.vcl_base, "TPanel");
         assert_eq!(entry.depth, 1);
@@ -314,14 +317,14 @@ mod tests {
         let mut parents = HashMap::new();
         parents.insert(
             "tcfgrid".to_string(),
-            ("tcfbasegrid".to_string(), "cfgrid.pas".to_string()),
+            ("TCFGrid".to_string(), "tcfbasegrid".to_string(), "cfgrid.pas".to_string()),
         );
         parents.insert(
             "tcfbasegrid".to_string(),
-            ("tstringgrid".to_string(), "cfbasegrid.pas".to_string()),
+            ("TCFBaseGrid".to_string(), "tstringgrid".to_string(), "cfbasegrid.pas".to_string()),
         );
 
-        let entry = resolve_to_vcl_base("TCFGrid", &parents).unwrap();
+        let entry = resolve_to_vcl_base("tcfgrid", &parents).unwrap();
         assert_eq!(entry.custom_type, "TCFGrid");
         assert_eq!(entry.vcl_base, "TStringGrid");
         assert_eq!(entry.depth, 2);
@@ -332,14 +335,14 @@ mod tests {
         let mut parents = HashMap::new();
         parents.insert(
             "ta".to_string(),
-            ("tb".to_string(), "a.pas".to_string()),
+            ("TA".to_string(), "tb".to_string(), "a.pas".to_string()),
         );
         parents.insert(
             "tb".to_string(),
-            ("ta".to_string(), "b.pas".to_string()),
+            ("TB".to_string(), "ta".to_string(), "b.pas".to_string()),
         );
 
-        assert!(resolve_to_vcl_base("TA", &parents).is_none());
+        assert!(resolve_to_vcl_base("ta", &parents).is_none());
     }
 
     #[test]
@@ -347,10 +350,10 @@ mod tests {
         let mut parents = HashMap::new();
         parents.insert(
             "tcustom".to_string(),
-            ("tunknownbase".to_string(), "custom.pas".to_string()),
+            ("TCustom".to_string(), "tunknownbase".to_string(), "custom.pas".to_string()),
         );
 
-        assert!(resolve_to_vcl_base("TCustom", &parents).is_none());
+        assert!(resolve_to_vcl_base("tcustom", &parents).is_none());
     }
 
     #[test]
@@ -420,8 +423,10 @@ mod tests {
         assert_eq!(result.len(), 2);
         assert!(result.contains_key("tcfpainel"));
         assert!(result.contains_key("tcfedit"));
-        assert_eq!(result["tcfpainel"].0, "tpanel");
-        assert_eq!(result["tcfedit"].0, "tedit");
+        assert_eq!(result["tcfpainel"].0, "TCFPainel");
+        assert_eq!(result["tcfpainel"].1, "tpanel");
+        assert_eq!(result["tcfedit"].0, "TCFEdit");
+        assert_eq!(result["tcfedit"].1, "tedit");
 
         let _ = std::fs::remove_file(&db_path);
     }

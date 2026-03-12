@@ -378,8 +378,10 @@ function renderComponent(comp) {
   var resolvedType = resolveType(comp.type);
   var renderer = RENDERERS[resolvedType];
   if (renderer) {
-    var resolvedComp = Object.assign({}, comp, { type: resolvedType });
-    return renderer(resolvedComp);
+    var target = resolvedType !== comp.type
+      ? Object.assign({}, comp, { type: resolvedType })
+      : comp;
+    return renderer(target);
   }
   return renderUnknown(comp);
 }
