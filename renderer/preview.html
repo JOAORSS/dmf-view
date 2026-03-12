@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>DFM Preview Test</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <script src="renderer.js"></script>
+  <script>
+    var json = {
+      "type": "TForm",
+      "name": "frmCadastro",
+      "props": {
+        "Left": 100,
+        "Top": 100,
+        "Width": 800,
+        "Height": 600,
+        "Caption": "Cadastro de Clientes",
+        "Align": "alNone",
+        "Anchors": ["akLeft", "akTop"],
+        "Visible": true,
+        "Enabled": true,
+        "Color": "clBtnFace",
+        "Font.Size": 8,
+        "Font.Style": []
+      },
+      "children": [
+        {
+          "type": "TPanel",
+          "name": "pnlTopo",
+          "props": {
+            "Left": 0, "Top": 0, "Width": 800, "Height": 50,
+            "Align": "alTop", "Color": "clBtnFace",
+            "Anchors": ["akLeft", "akTop"],
+            "Visible": true, "Enabled": true
+          },
+          "children": [
+            {
+              "type": "TLabel",
+              "name": "lblTitulo",
+              "props": {
+                "Left": 8, "Top": 16,
+                "Caption": "Clientes",
+                "Anchors": ["akLeft", "akTop"],
+                "Align": "alNone", "Color": "clBtnFace",
+                "Visible": true, "Enabled": true
+              },
+              "children": []
+            }
+          ]
+        },
+        {
+          "type": "TPanel",
+          "name": "pnlCliente",
+          "props": {
+            "Left": 0, "Top": 50, "Width": 800, "Height": 550,
+            "Align": "alClient", "Color": "clBtnFace",
+            "Anchors": ["akLeft", "akTop"],
+            "Visible": true, "Enabled": true
+          },
+          "children": [
+            {
+              "type": "TLabel",
+              "name": "lblNome",
+              "props": {
+                "Left": 16, "Top": 16, "Caption": "Nome:",
+                "Align": "alNone", "Anchors": ["akLeft", "akTop"],
+                "Color": "clBtnFace", "Visible": true, "Enabled": true
+              },
+              "children": []
+            },
+            {
+              "type": "TEdit",
+              "name": "edtNome",
+              "props": {
+                "Left": 16, "Top": 32, "Width": 760, "Height": 21,
+                "Align": "alNone", "Anchors": ["akLeft", "akTop", "akRight"],
+                "Color": "clWindow", "Visible": true, "Enabled": true,
+                "anchor_right": 24
+              },
+              "children": []
+            },
+            {
+              "type": "TButton",
+              "name": "btnSalvar",
+              "props": {
+                "Left": 700, "Top": 520, "Width": 75, "Height": 25,
+                "Caption": "Salvar",
+                "Align": "alNone", "Anchors": ["akRight", "akBottom"],
+                "Color": "clBtnFace", "Visible": true, "Enabled": true,
+                "anchor_right": 25, "anchor_bottom": 5
+              },
+              "children": []
+            }
+          ]
+        }
+      ]
+    };
+    document.body.innerHTML = renderDFM(json);
+  </script>
+</body>
+</html>

@@ -1,0 +1,81 @@
+/* DFM Preview Styles */
+* {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: #e0e0e0;
+  padding: 16px;
+}
+
+.dfm-form {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-size: 8pt;
+}
+
+.dfm-panel-caption {
+  position: absolute;
+  width: 100%;
+  text-align: center;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  font-size: 8pt;
+  color: #000;
+}
+
+.dfm-groupbox {
+  padding: 8px;
+}
+
+.dfm-groupbox legend {
+  font-size: 8pt;
+  padding: 0 4px;
+}
+
+.dfm-label {
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.dfm-edit,
+.dfm-memo,
+.dfm-combobox,
+.dfm-listbox {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-size: 8pt;
+}
+
+.dfm-button,
+.dfm-bitbtn {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-size: 8pt;
+  text-align: center;
+}
+
+.dfm-checkbox,
+.dfm-radiobutton {
+  font-size: 8pt;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.dfm-tabs {
+  font-size: 8pt;
+}
+
+.dfm-stringgrid td {
+  font-size: 8pt;
+}
+
+.dfm-image-placeholder {
+  font-size: 10px;
+}
+
+.dfm-unknown {
+  font-size: 10px;
+}
