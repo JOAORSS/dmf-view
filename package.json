@@ -3,7 +3,7 @@
   "displayName": "DFM Preview",
   "description": "Preview Delphi .dfm form files as HTML/CSS in VSCode",
   "version": "0.0.1",
-  "publisher": "dmf-view",
+  "publisher": "dfm-view",
   "engines": {
     "vscode": "^1.80.0"
   },
