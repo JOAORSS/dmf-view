@@ -1,6 +1,9 @@
 /* renderer.js — DFM Preview renderer (Steps 3–6) */
 /* Works in both browser and VSCode WebviewPanel */
 
+// --- Component aliases fallback ---
+var COMPONENT_ALIASES = (typeof COMPONENT_ALIASES !== 'undefined') ? COMPONENT_ALIASES : {};
+
 // --- Delphi color mapping ---
 
 var DELPHI_COLORS = {
@@ -340,6 +343,15 @@ function renderUnknown(comp) {
     + renderChildren(comp.children) + '</div>';
 }
 
+// --- Alias resolution ---
+
+function resolveType(compType) {
+  if (typeof COMPONENT_ALIASES !== 'undefined' && COMPONENT_ALIASES[compType]) {
+    return COMPONENT_ALIASES[compType];
+  }
+  return compType;
+}
+
 // --- Main dispatcher ---
 
 var RENDERERS = {
@@ -363,8 +375,12 @@ var RENDERERS = {
 
 function renderComponent(comp) {
   if (!comp || !comp.type) return '';
-  var renderer = RENDERERS[comp.type];
-  if (renderer) return renderer(comp);
+  var resolvedType = resolveType(comp.type);
+  var renderer = RENDERERS[resolvedType];
+  if (renderer) {
+    var resolvedComp = Object.assign({}, comp, { type: resolvedType });
+    return renderer(resolvedComp);
+  }
   return renderUnknown(comp);
 }
 

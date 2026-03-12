@@ -39,6 +39,21 @@ export function activate(context: vscode.ExtensionContext) {
         return;
       }
 
+      // Load component aliases if available
+      const dfmDir = path.dirname(dfmPath);
+      const aliasesPath = path.join(dfmDir, 'component-aliases.json');
+      let aliases: Record<string, string> = {};
+
+      if (fs.existsSync(aliasesPath)) {
+        try {
+          const raw = fs.readFileSync(aliasesPath, 'utf-8');
+          const parsed = JSON.parse(raw);
+          aliases = parsed.aliases ?? {};
+        } catch {
+          // aliases empty, continue without
+        }
+      }
+
       const panel = vscode.window.createWebviewPanel(
         'dfmPreview',
         `Preview: ${path.basename(dfmPath)}`,
@@ -49,18 +64,48 @@ export function activate(context: vscode.ExtensionContext) {
       panel.webview.html = buildWebviewHtml(
         panel.webview,
         context.extensionUri,
-        componentTree
+        componentTree,
+        aliases
       );
     });
   });
 
+  const cmdAliases = vscode.commands.registerCommand('dfmPreview.generateAliases', () => {
+    const editor = vscode.window.activeTextEditor;
+    if (!editor) {
+      vscode.window.showWarningMessage('No active editor found.');
+      return;
+    }
+
+    const dfmPath = editor.document.uri.fsPath;
+    const scannerPath = vscode.workspace
+      .getConfiguration('dfmPreview')
+      .get<string>('scannerPath', 'dfm_scanner');
+
+    vscode.window.withProgress(
+      { location: vscode.ProgressLocation.Notification, title: 'Gerando aliases...' },
+      () => new Promise<void>((resolve) => {
+        cp.execFile(scannerPath, ['--aliases', '--save', dfmPath], (err, stdout, stderr) => {
+          if (err) {
+            vscode.window.showErrorMessage(`Erro ao gerar aliases: ${stderr || err.message}`);
+          } else {
+            vscode.window.showInformationMessage(`Aliases gerados: ${stdout.trim()}`);
+          }
+          resolve();
+        });
+      })
+    );
+  });
+
   context.subscriptions.push(cmd);
+  context.subscriptions.push(cmdAliases);
 }
 
 function buildWebviewHtml(
   webview: vscode.Webview,
   extensionUri: vscode.Uri,
-  componentTree: unknown
+  componentTree: unknown,
+  aliases: Record<string, string> = {}
 ): string {
   const rendererUri = webview.asWebviewUri(
     vscode.Uri.joinPath(extensionUri, 'renderer', 'renderer.js')
@@ -70,6 +115,7 @@ function buildWebviewHtml(
   );
 
   const jsonStr = JSON.stringify(componentTree);
+  const aliasesStr = JSON.stringify(aliases);
 
   return `<!DOCTYPE html>
 <html>
@@ -80,6 +126,7 @@ function buildWebviewHtml(
 <body>
   <script src="${rendererUri}"></script>
   <script>
+    var COMPONENT_ALIASES = ${aliasesStr};
     var json = ${jsonStr};
     document.body.innerHTML = renderDFM(json);
   </script>
